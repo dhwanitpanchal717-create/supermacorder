@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Supermac Orders PWA</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+  <meta name="theme-color" content="#1e3a8a" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
+</head>
+<body>
+  <div id="toast" class="toast"></div>
+
+  <!-- AUTH SCREEN -->
+  <section id="loginScreen" class="screen active">
+    <div class="login-container">
+      <div class="login-brand">
+        <div class="brand-logo"><i class="material-icons">precision_manufacturing</i></div>
+        <h1>SUPERMAC</h1>
+        <p>INDUSTRIAL ERP ORDERS PORTAL</p>
+      </div>
+      <div class="login-card">
+        <h2>System Authentication</h2>
+        <p class="login-subtitle">Please select your role and enter your secure terminal PIN.</p>
+
+        <div class="form-group">
+          <label><i class="material-icons">badge</i> Operator Role</label>
+          <div class="input-wrapper">
+            <select id="loginUser">
+              <option value="Admin">System Administrator</option>
+              <option value="Engineer">Field Engineer</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label><i class="material-icons">lock</i> Terminal PIN</label>
+          <div class="input-wrapper">
+            <input id="loginPin" type="password" placeholder="••••" max="4" autocomplete="current-password" />
+          </div>
+        </div>
+
+        <button id="loginBtn" class="btn-primary full-width">
+          <span>Authenticate Terminal</span>
+          <i class="material-icons">verified_user</i>
+        </button>
+
+        <div class="login-hint">
+          <i class="material-icons">info</i>
+          <span>Authorized personnel only. Logs are synchronized with backend ledger.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN APP ERP INTERFACE -->
+  <section id="mainScreen" class="screen">
+    <div class="erp-layout">
+      
+      <!-- SIDEBAR COMPONENT -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <i class="material-icons logo-icon">settings_applications</i>
+          <div>
+            <h2>SUPERMAC</h2>
+            <span class="system-tag">ERP ENGINE V4</span>
+          </div>
+        </div>
+        
+        <div class="user-profile-badge">
+          <div class="avatar"><i class="material-icons">account_circle</i></div>
+          <div class="user-info">
+            <strong id="userMeta">-</strong>
+            <span class="status-online">System Online</span>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <a href="#dashboard-anchor" id="navDashboard" class="nav-item active">
+            <i class="material-icons">dashboard</i><span>Dashboard</span>
+          </a>
+          <a href="#search-anchor" id="navOrders" class="nav-item">
+            <i class="material-icons">fact_check</i><span>Order Ledger</span>
+          </a>
+          <a href="#adminPanel" id="navForm" class="nav-item admin-only">
+            <i class="material-icons">note_add</i><span>Order Intake Form</span>
+          </a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <button id="logoutBtn" class="btn-sidebar-logout">
+            <i class="material-icons">logout</i><span>Terminate Session</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTROLLER SHELL -->
+      <div class="main-content">
+        
+        <!-- TOP STICKY BAR -->
+        <header class="top-bar">
+          <div class="breadcrumb">
+            <span class="parent">Supermac Systems</span> / <span class="current" id="currentBreadcrumb">Dashboard</span>
+          </div>
+          <div class="top-bar-actions">
+            <button id="refreshBtn" class="btn-secondary">
+              <i class="material-icons">sync</i><span>Sync Ledger</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="scroll-container">
+          <div class="shell" id="dashboard-anchor">
+            
+            <!-- INDUSTRIAL METRIC METERS -->
+            <section class="stats-row">
+              <div class="metric-card">
+                <div class="metric-icon blue"><i class="material-icons">inventory</i></div>
+                <div class="metric-data">
+                  <span class="label">Total Orders Logged</span>
+                  <strong id="totalOrders">0</strong>
+                </div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-icon orange"><i class="material-icons">pending_actions</i></div>
+                <div class="metric-data">
+                  <span class="label">Pending Production</span>
+                  <strong id="pendingOrdersCount">0</strong>
+                </div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-icon green"><i class="material-icons">event_available</i></div>
+                <div class="metric-data">
+                  <span class="label">Intake (Current Month)</span>
+                  <strong id="monthOrders">0</strong>
+                </div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-icon grey"><i class="material-icons">build_circle</i></div>
+                <div class="metric-data">
+                  <span class="label">Active Configurations</span>
+                  <strong id="machineTypes">0</strong>
+                </div>
+              </div>
+            </section>
+
+            <!-- ORDER FORM INTAKE -->
+            <section id="adminPanel" class="panel rounded-card production-form-panel">
+              <div class="panel-head border-bottom">
+                <div class="panel-title-wrapper">
+                  <i class="material-icons panel-icon text-blue">assignment</i>
+                  <div>
+                    <h2 id="formTitle">Order Intake Blueprint Form</h2>
+                    <p class="admin-only">Enter engineering specifications, mechanical configurations, control schemas, and logistics metrics.</p>
+                    <p class="engineer-only">Field Engineer Authorization Mode: Review hardware profiles and alter deployment status flags.</p>
+                  </div>
+                </div>
+                <button id="cancelEditBtn" class="btn-danger hidden" type="button">
+                  <i class="material-icons">cancel</i><span>Abort Refactoring</span>
+                </button>
+              </div>
+
+              <form id="orderForm" class="order-form">
+                
+                <!-- SECTION 1: CUSTOMER INFORMATION -->
+                <div class="form-section-card">
+                  <div class="section-title"><i class="material-icons">business</i> SECTION 1: Customer Information Matrix</div>
+                  <div class="form-grid">
+                    <div class="field required"><label>Order Intake Date</label><input name="orderDate" type="date" required /></div>
+                    <div class="field required"><label>Buyer Name</label><input name="buyerName" required placeholder="Ex: Raj Plastics" /></div>
+                    <div class="field"><label>Company Registered Name</label><input name="companyName" placeholder="Ex: Raj Plastics Pvt Ltd" /></div>
+                    <div class="field"><label>Target Delivery City</label><input name="location" placeholder="Ex: Ahmedabad" /></div>
+                  </div>
+                </div>
+
+                <!-- SECTION 2: MACHINE INFORMATION -->
+                <div class="form-section-card">
+                  <div class="section-title"><i class="material-icons">precision_manufacturing</i> SECTION 2: Mechanical Frame Architecture</div>
+                  <div class="form-grid">
+                    <div class="field required">
+                      <label>Machine Kinematics Architecture</label>
+                      <select name="machineType" required id="formMachineType">
+                        <option value="Toggle Type">Toggle Type</option>
+                        <option value="Ram Type">Ram Type</option>
+                      </select>
+                    </div>
+                    <div class="field required">
+                      <label>Machine Model Designation</label>
+                      <select name="machineModel" required id="formMachineModel">
+                        <option value="SM-60">SM-60</option>
+                        <option value="SM-80">SM-80</option>
+                        <option value="SM-110">SM-110</option>
+                        <option value="ST-120">ST-120</option>
+                        <option value="SM-125">SM-125</option>
+                        <option value="ST-160">ST-160</option>
+                        <option value="SM-150">SM-150</option>
+                        <option value="SM-200">SM-200</option>
+                        <option value="SM-250">SM-250</option>
+                        <option value="SM-350">SM-350</option>
+                        <option value="SM-450">SM-450</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SECTION 3: PLC -->
+                <div class="form-section-card">
+                  <div class="section-title"><i class="material-icons">developer_board</i> SECTION 3: Central Processing Automation (PLC)</div>
+                  <div class="form-grid">
+                    <div class="field">
+                      <label>PLC Ecosystem Brand</label>
+                      <select name="plc">
+                        <option value="">-- Select Brand --</option>
+                        <option value="Keba">Keba</option>
+                        <option value="B&R">B&R</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SECTION 4: SERVO -->
+                <div class="form-section-card">
+                  <div class="section-title"><i class="material-icons">bolt</i> SECTION 4: Servo Drive Powertrain</div>
+                  <div class="form-grid">
+                    <div class="field">
+                      <label>Servo Inverter/Motor Make</label>
+                      <select name="servoType">
+                        <option value="">-- Select Powertrain Make --</option>
+                        <option value="Inovance">Inovance</option>
+                        <option value="Delta">Delta</option>
+                        <option value="Dyana">Dyana</option>
+                        <option value="THM">THM</option>
+                      </select>
+                    </div>
+                    <div class="field"><label>Servo System Size / Rating</label><input name="servoSize" placeholder="Ex: 15 kW - 41 Amp" /></div>
+                  </div>
+                </div>
+
+                <!-- SECTION 5: SCREW -->
+                <div class="form-section-card">
+                  <div class="section-title"><i class="material-icons">reorder</i> SECTION 5: Extrusion Screw & Barrel Assembly</div>
+                  <div class="form-grid">
+                    <div class="field">
+                      <label>Screw Geometrical Type</label>
+                      <select name="screwType">
+                        <option value="">-- Select Geometry --</option>
+                        <option value="Barrier">Barrier</option>
+                        <option value="Standard">Standard</option>
+                        <option value="Bio metallic">Bio metallic</option>
+                        <option value="PET">PET</option>
+                        <option value="RPVC">RPVC</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label>Screw Diameter Specification</label>
+                      <select name="screwSize">
+                        <option value="">-- Select Diameter --</option>
+                        <option value="30 mm">30 mm</option>
+                        <option value="40 mm">40 mm</option>
+                        <option value="45 mm">45 mm</option>
+                        <option value="50 mm">50 mm</option>
+                        <option value="55 mm">55 mm</option>
+                        <option value="60 mm">60 mm</option>
+                        <option value="65 mm">65 mm</option>
+                        <option value="70 mm">70 mm</option>
+                        <option value="80 mm">80 mm</option>
+                        <option value="90 mm">90 mm</option>
+                        <option value="120 mm">120 mm</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label>Barrel Size</label>
+                      <select name="barrelType">
+                        <option value="">-- Select Barrel Size --</option>
+                        <option value="Dia 95 x 30 x 938mm">Dia 95 x 30 x 938mm</option>
+                        <option value="Dia 95 x 35 x 938 mm">Dia 95 x 35 x 938 mm</option>
+                        <option value="Dia 105 x 40 x 1040">Dia 105 x 40 x 1040</option>
+                        <option value="Dia 105 x 45 x 1040">Dia 105 x 45 x 1040</option>
+                        <option value="Dia 105 x 35 x 1040">Dia 105 x 35 x 1040</option>
+                        <option value="Dia 125 x 45 x 1200">Dia 125 x 45 x 1200</option>
+                        <option value="Dia 125 x 40 x 1200">Dia 125 x 40 x 1200</option>
+                        <option value="Dia 125 x 50 x 1200">Dia 125 x 50 x 1200</option>
+                        <option value="Dia 140 x 45 x 1200">Dia 140 x 45 x 1200</option>
+                        <option value="Dia 140 x 50 x 1200">Dia 140 x 50 x 1200</option>
+                        <option value="Dia 140 x 50 x 1500">Dia 140 x 50 x 1500</option>
+                        <option value="Dia 140 x 50 x 1480">Dia 140 x 50 x 1480</option>
+                        <option value="Dia 140 x 55 x 1480">Dia 140 x 55 x 1480</option>
+                        <option value="Dia 165 x 55 x 1720">Dia 165 x 55 x 1720</option>
+                        <option value="Dia 165 x 60 x 1570">Dia 165 x 60 x 1570</option>
+                        <option value="Dia 165 x 65 x 1570">Dia 165 x 65 x 1570</option>
+                        <option value="Dia 165 x 60 x 1820">Dia 165 x 60 x 1820</option>
+                        <option value="Dia 140 x 60 x 1580">Dia 140 x 60 x 1580</option>
+                        <option value="Dia 140 x 65 x 1580">Dia 140 x 65 x 1580</option>
+                        <option value="Dia 220 x 80 x 2130">Dia 220 x 80 x 2130</option>
+                        <option value="Dia 220 x 90 x 2130">Dia 220 x 90 x 2130</option>
+                        <option value="Dia 200 x 70 x 1900">Dia 200 x 70 x 1900</option>
+                        <option value="Dia 200 x 75 x 1900">Dia 200 x 75 x 1900</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SECTION 6: HYDRAULIC -->
+                <div class="form-section-card">
+                  <div class="section-title"><i class="material-icons">water</i> SECTION 6: Fluid Power & Hydraulic Matrix</div>
+                  <div class="form-grid">
+                    <div class="field"><label>Hydro Motor Size</label><input name="motorHP" placeholder="Ex: 15 HP / 11 kW" /></div>
+                  </div>
+                </div>
+
+                <!-- SECTION 7: MACHINE CONFIGURATION -->
+                <div class="form-section-card">
+                  <div class="section-title"><i class="material-icons">tune</i> SECTION 7: Auxiliary Machine Configurations</div>
+                  <div class="form-grid">
+                    <div class="field">
+                      <label>Tie Bar Structure Sizing</label>
+                      <select name="tieBarDistance">
+                        <option value="Std">Standard (Std)</option>
+                        <option value="Extralong">Extralong</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SECTION 8, 9, 10: LOGISTICS, DISPATCH & REMARKS -->
+                <div class="form-section-card highlight-engineer-card">
+                  <div class="section-title"><i class="material-icons">local_shipping</i> SECTION 8, 9 & 10: Fulfillment Operations</div>
+                  <div class="form-grid">
+                    <div class="field required">
+                      <label>Production Operations Priority</label>
+                      <select name="priority" required>
+                        <option value="Normal">Normal</option>
+                        <option value="High">High</option>
+                        <option value="Urgent">Urgent / Fast</option>
+                        <option value="Hold">Hold Operations</option>
+                      </select>
+                    </div>
+                    <div class="field required"><label>Contractual Delivery Schedule Date</label><input name="deliveryDate" type="date" required /></div>
+                    <div class="field required">
+                      <label>Lifecycle Assembly Status</label>
+                      <select name="status" required id="formStatusField"></select>
+                    </div>
+                    <div class="field wide"><label>Engineering Special Instructions (Remarks)</label><textarea name="specialRequirement" rows="3" placeholder="Enter custom components, adaptations, and operational nuances..."></textarea></div>
+                    <div class="field wide hidden"><label>Internal Quality Ledger Notes</label><textarea name="internalNotes" rows="1"></textarea></div>
+                  </div>
+                </div>
+
+                <div class="form-submit-row">
+                  <button id="saveOrderBtn" class="btn-primary" type="submit">
+                    <i class="material-icons">save</i><span>Commit Specs to Ledger</span>
+                  </button>
+                </div>
+              </form>
+            </section>
+
+            <!-- LEDGER & SEARCH MATRIX SYSTEM -->
+            <section class="panel rounded-card" id="search-anchor">
+              <div class="panel-head">
+                <div class="panel-title-wrapper">
+                  <i class="material-icons panel-icon text-grey">view_list</i>
+                  <div>
+                    <h2>Global Production Orders Ledger</h2>
+                    <p>Filter, dissect, query, and review historical and live manufacturing floor contracts.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- REAL-TIME FILTER RUNTIME COMPONENT -->
+              <div class="search-matrix-box">
+                <div class="search-input-field">
+                  <i class="material-icons">search</i>
+                  <input id="searchInput" placeholder="Query Matrix by Buyer, Corporate Entity, Line items, Components, Locations..." />
+                </div>
+                <div class="filter-dropdown-field">
+                  <i class="material-icons">filter_alt</i>
+                  <select id="statusFilter">
+                    <option value="All">All Production Statuses</option>
+                    <option value="New Order">New Order</option>
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Delivered">Delivered</option>
+                    <option value="Cancelled">Cancelled</option>
+                    <option value="Ready">Ready</option>
+                    <option value="Dispatched">Dispatched</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- DYNAMIC HIGH-END ERP DATA LIST CONTAINER -->
+              <div id="ordersList" class="orders-grid-system"></div>
+            </section>
+            
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- HIGH-SPEC ARCHITECTURAL DETAILS DIALOG -->
+    <dialog id="orderDialog" class="erp-dialog rounded-card">
+      <div class="dialog-frame">
+        <div class="dialog-header border-bottom">
+          <div class="header-details">
+            <span class="dialog-pre-title" id="dialogOrderNum">SM-XXXX-XXX</span>
+            <h2 id="dialogTitle">System Architecture Blueprint View</h2>
+          </div>
+          <button id="closeDialog" class="btn-dialog-close"><i class="material-icons">close</i></button>
+        </div>
+        <div id="orderDetailContent" class="dialog-body-scroll">
+          <!-- Populated programmatically into elegant grid blocks -->
+        </div>
+        <div class="dialog-footer border-top">
+          <button class="btn-secondary" onclick="window.print()"><i class="material-icons">print</i><span>Print Component Blueprint</span></button>
+          <button class="btn-primary" onclick="document.getElementById('orderDialog').close()"><i class="material-icons">done</i><span>Acknowledge Data</span></button>
+        </div>
+      </div>
+    </dialog>
+
+  </section>
+
+  <!-- ACTION BUTTON FLOAT SYSTEM -->
+  <button id="floatingAddBtn" class="floating-fab admin-only" title="Open Intake Blueprint Form">
+    <i class="material-icons">add</i>
+  </button>
+
+  <script src="app.js"></script>
+</body>
+</html>
